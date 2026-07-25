@@ -1,0 +1,199 @@
+<style>
+  :root {
+    /* Paleta anclada en el arranque de una terminal: azul de medianoche cálido (no negro puro),
+       ámbar de cursor CRT, verde discreto de prompt. */
+    --void: #10131a;
+    --panel: #161a22;
+    --ink: #e7e3d8;
+    --ink-dim: #8b93a4;
+    --amber: #f4b860;
+    --prompt: #7fb98a;
+    --wire: #2c3342;
+    --mono: ui-monospace, "SF Mono", Menlo, "Cascadia Code", "DejaVu Sans Mono", monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #1b2130 0%, var(--void) 55%),
+      var(--void);
+    color: var(--ink);
+    font-family: var(--mono);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 9vw, 4.2rem);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    text-align: center;
+    text-wrap: balance;
+    margin: 0 0 2.4rem;
+  }
+  h1 .cursor {
+    display: inline-block;
+    width: 0.58ch;
+    height: 0.92em;
+    background: var(--amber);
+    margin-left: 0.14em;
+    vertical-align: -0.08em;
+    animation: blink 1.15s steps(1) infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Consola desnuda: sin barra de ventana ni semáforos de macOS. Solo el prompt sobre el panel,
+     un borde sutil, y un filo ámbar arriba que insinúa el cursor sin gritar. */
+  .console {
+    position: relative;
+    /* La caja abraza el comando (fit-content) en vez de un ancho fijo que dejaría vacío a la derecha. */
+    width: fit-content;
+    max-width: 100%;
+    background: var(--panel);
+    border: 1px solid var(--wire);
+    border-radius: 8px;
+    padding: 1.35rem 1.3rem;
+    box-shadow: 0 28px 70px -34px rgba(0,0,0,0.75);
+  }
+  .console::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 1.3rem; right: 1.3rem;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--amber), transparent);
+    opacity: 0.5;
+  }
+
+  .row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+  .actions { display: flex; gap: 0.1rem; flex-shrink: 0; margin: -0.2rem -0.3rem 0 0; }
+
+  .prompt-line {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    line-height: 1.7;
+    min-width: 0;
+  }
+  .prompt-line .sigil { color: var(--prompt); user-select: none; flex-shrink: 0; }
+  .prompt-line code {
+    color: var(--ink);
+    font-size: 0.92rem;
+    white-space: nowrap;
+  }
+  .prompt-line code .pipe { color: var(--amber); }
+
+  /* En móvil no hay ancho: el comando se trunca con … en una línea. Para ejecutarlo está el botón copiar.
+     La consola pasa a 100% y prompt-line se estira (flex:1 + min-width:0) para dar al code un ancho
+     contra el que el ellipsis pueda truncar. */
+  @media (max-width: 560px) {
+    .console { width: 100%; }
+    .prompt-line { flex: 1; min-width: 0; }
+    .prompt-line code {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      min-width: 0;
+    }
+  }
+
+  /* Copiar y descargar: glifos gemelos, discretos, sin caja. Viven en la consola, no fuera. */
+  .iconbtn {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .iconbtn:hover { color: var(--ink); background: rgba(255,255,255,0.04); }
+  .iconbtn:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .iconbtn svg { width: 16px; height: 16px; display: block; }
+  #copy[data-copied="true"] { color: var(--prompt); }
+  #copy .check { display: none; }
+  #copy[data-copied="true"] .clip { display: none; }
+  #copy[data-copied="true"] .check { display: block; }
+
+  /* Al copiar, la propia consola confirma con una línea de comentario, dentro de la ficción de shell. */
+  .echo {
+    height: 0;
+    overflow: hidden;
+    color: var(--prompt);
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: opacity 0.2s, height 0.2s, margin 0.2s;
+  }
+  .console[data-copied="true"] .echo {
+    height: 1.4em;
+    margin-top: 0.7rem;
+    opacity: 0.8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    h1 .cursor { animation: none; }
+    .echo { transition: none; }
+  }
+</style>
+
+<h1>make install<span class="cursor" aria-hidden="true"></span></h1>
+
+<div class="console" id="console">
+  <div class="row">
+    <div class="prompt-line">
+      <span class="sigil" aria-hidden="true">$</span>
+      <code id="cmd">curl -fsSL https://&lt;usuario&gt;.github.io/dotfiles/install.sh <span class="pipe">|</span> bash</code>
+    </div>
+    <div class="actions">
+      <button class="iconbtn" id="copy" aria-label="Copiar el comando">
+        <svg class="clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5"></path>
+        </svg>
+      </button>
+      <a class="iconbtn" href="install.sh" download aria-label="Descargar install.sh">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><path d="M7 10l5 5 5-5"></path><path d="M12 15V3"></path>
+        </svg>
+      </a>
+    </div>
+  </div>
+  <div class="echo" aria-hidden="true"># copiado al portapapeles</div>
+</div>
+
+<script>
+  const consoleEl = document.getElementById("console");
+  const button = document.getElementById("copy");
+  const command = document.getElementById("cmd").innerText;
+  let timer;
+  button.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(command);
+      button.dataset.copied = "true";
+      consoleEl.dataset.copied = "true";
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        button.dataset.copied = "false";
+        consoleEl.dataset.copied = "false";
+      }, 2200);
+    } catch {
+      button.setAttribute("aria-label", "Copia manual: selecciona el comando");
+    }
+  });
+</script>
