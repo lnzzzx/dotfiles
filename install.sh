@@ -30,9 +30,10 @@ ensure_infisical() {
 }
 
 infisical_session() {
-    log "Login en Infisical (autentica en el navegador con el QR)"
-    INFISICAL_TOKEN="$(infisical login --plain --silent)"
-    export INFISICAL_TOKEN
+    log "Login en Infisical"
+    # Interactivo (-i) contra la instancia EU. Infisical guarda la sesión y el dominio en su config,
+    # así que los 'secrets get' posteriores (aquí y en bootstrap.sh) los heredan.
+    infisical login -i --domain="$INFISICAL_DOMAIN" </dev/tty
 }
 
 clone_environment() {
