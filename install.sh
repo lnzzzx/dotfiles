@@ -26,7 +26,7 @@ ensure_apt_base() {
 ensure_infisical() {
     log "Infisical CLI"
     command -v infisical >/dev/null 2>&1 && return
-    wget -qO- 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
+    curl -1sLf 'https://artifacts-cli.infisical.com/setup.deb.sh' | sudo -E bash
     sudo apt-get install -y infisical
 }
 
