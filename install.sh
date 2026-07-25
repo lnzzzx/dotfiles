@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+INFISICAL_DOMAIN="https://eu.infisical.com"
 INFISICAL_PROJECT_ID="8cf99689-4102-40a1-b7f2-f28ae9a0f018"
 INFISICAL_ENVIRONMENT="environment"
 ENVIRONMENT_DIR="${ENVIRONMENT_DIR:-$HOME/.local/share/environment}"
@@ -37,7 +38,7 @@ infisical_session() {
 clone_environment() {
     log "Clonando el repo de configuración"
     local github_token
-    github_token="$(infisical secrets get GITHUB_PAT --plain --silent --projectId "$INFISICAL_PROJECT_ID" --env="$INFISICAL_ENVIRONMENT")"
+    github_token="$(infisical secrets get GITHUB_PAT --plain --silent --domain="$INFISICAL_DOMAIN" --projectId "$INFISICAL_PROJECT_ID" --env="$INFISICAL_ENVIRONMENT")"
     if [ -d "$ENVIRONMENT_DIR/.git" ]; then
         git -C "$ENVIRONMENT_DIR" pull --ff-only
     else
