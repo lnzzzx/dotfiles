@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-INFISICAL_DOMAIN="https://infisical.com"
+INFISICAL_DOMAIN="https://app.infisical.com"
 INFISICAL_PROJECT_ID="8cf99689-4102-40a1-b7f2-f28ae9a0f018"
 INFISICAL_ENVIRONMENT="environment"
 ENVIRONMENT_DIR="${ENVIRONMENT_DIR:-$HOME/.local/share/environment}"
